@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>School Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen flex items-center justify-center">
+  <div class="bg-white shadow-xl rounded-xl p-10 max-w-3xl w-full">
+    <h2 class="text-3xl font-bold mb-6 text-blue-700 text-center">School Management System</h2>
+
+    <!-- Add School Form -->
+    <div class="mb-8">
+      <h3 class="text-xl font-semibold mb-4">➕ Add School</h3>
+      <form id="addSchoolForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium">School Name</label>
+          <input type="text" id="name" required class="w-full mt-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium">Address</label>
+          <input type="text" id="address" required class="w-full mt-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium">Latitude</label>
+            <input type="number" id="latitude" step="any" required class="w-full mt-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-400" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium">Longitude</label>
+            <input type="number" id="longitude" step="any" required class="w-full mt-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-400" />
+          </div>
+        </div>
+
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition duration-200">
+          Add School
+        </button>
+      </form>
+    </div>
+
+    <hr class="my-6 border-t-2 border-gray-200"/>
+
+    <!-- List Schools -->
+    <div>
+      <h3 class="text-xl font-semibold mb-4">📍 List Nearby Schools</h3>
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block text-sm font-medium">Your Latitude</label>
+          <input type="number" id="userLat" step="any" class="w-full mt-1 p-2 border rounded-md focus:ring-2 focus:ring-green-400" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Your Longitude</label>
+          <input type="number" id="userLon" step="any" class="w-full mt-1 p-2 border rounded-md focus:ring-2 focus:ring-green-400" />
+        </div>
+      </div>
+
+      <button onclick="listSchools()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition duration-200 mb-6">
+        Get Nearby Schools
+      </button>
+
+      <div id="schoolList" class="grid grid-cols-1 gap-4"></div>
+    </div>
+  </div>
+
+  <script>
+    const apiBase = 'https://educase-task-5an8.onrender.com';
+
+    // Add school
+    document.getElementById('addSchoolForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const payload = {
+        name: document.getElementById('name').value,
+        address: document.getElementById('address').value,
+        latitude: parseFloat(document.getElementById('latitude').value),
+        longitude: parseFloat(document.getElementById('longitude').value),
+      };
+
+      try {
+        const response = await fetch(`${apiBase}/addSchool`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        alert(result.message || 'School added!');
+      } catch (err) {
+        alert('Error adding school: ' + err.message);
+      }
+    });
+
+    // List schools
+    async function listSchools() {
+      const lat = document.getElementById('userLat').value;
+      const lon = document.getElementById('userLon').value;
+
+      try {
+        const res = await fetch(`${apiBase}/listSchools?latitude=${lat}&longitude=${lon}`);
+        const schools = await res.json();
+
+        const list = document.getElementById('schoolList');
+        list.innerHTML = '';
+
+        schools.forEach(s => {
+          const card = document.createElement('div');
+          card.className = "bg-white p-4 rounded-lg shadow hover:shadow-md transition duration-200 border";
+
+          card.innerHTML = `
+            <h4 class="text-lg font-bold text-blue-700">${s.name}</h4>
+            <p class="text-sm text-gray-600">${s.address}</p>
+            <p class="text-sm text-green-700 mt-1">Distance: ${s.distance.toFixed(2)} km</p>
+          `;
+
+          list.appendChild(card);
+        });
+      } catch (err) {
+        alert('Error fetching schools: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>
